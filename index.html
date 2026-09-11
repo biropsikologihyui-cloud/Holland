@@ -208,37 +208,22 @@
                 <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
             </div>
 
-            <div class="space-y-2">
-                <span class="bg-indigo-50 text-indigo-700 border border-indigo-100 text-xs px-3.5 py-1 rounded-full font-bold">Status: Jawaban Berhasil Terkirim</span>
-                <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900">Terima Kasih, <span id="displaySubmittedName" class="text-indigo-600">Peserta</span>!</h2>
-                <p class="text-xs sm:text-sm text-slate-600 max-w-md mx-auto leading-relaxed">
-                    Seluruh tes telah selesai dikerjakan. Laporan hasil psikotes format <strong>PDF</strong> telah dikirim secara langsung ke <strong>Email Biro Psikologi HYUI</strong> untuk kebutuhan analisis psikolog.
-                </p>
-            </div>
-
-            <!-- Identity Summary Card -->
-            <div class="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 text-left max-w-md mx-auto text-xs space-y-2">
-                <div class="font-bold text-slate-800 border-b border-slate-200 pb-1.5 flex items-center justify-between">
-                    <span>Ringkasan Pengajuan:</span>
-                    <span class="text-emerald-600 font-extrabold">✓ Terkirim ke Biro</span>
+        <!-- Modal Konfirmasi Soal belum Lengkap (Tanpa Window Confirm/Alert) -->
+        <div id="unansweredModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+            <div class="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-4 border border-slate-100">
+                <div class="w-12 h-12 bg-amber-100 text-amber-600 rounded-2xl flex items-center justify-center font-bold text-xl">
+                    ⚠️
                 </div>
-                <div class="grid grid-cols-2 gap-2 text-slate-600">
-                    <div><strong class="text-slate-800">Nama:</strong> <span id="summaryNama">-</span></div>
-                    <div><strong class="text-slate-800">Usia:</strong> <span id="summaryUsia">-</span> thn</div>
-                    <div><strong class="text-slate-800">Gender:</strong> <span id="summaryGender">-</span></div>
-                    <div><strong class="text-slate-800">Instansi:</strong> <span id="summaryInstansi">-</span></div>
-                    <div class="col-span-2"><strong class="text-slate-800">Tujuan Laporan:</strong> Admin Biro Psikologi HYUI</div>
+                <h3 class="text-lg font-bold text-slate-900">Belum Semua Soal Terjawab</h3>
+                <p id="unansweredModalText" class="text-xs text-slate-600 leading-relaxed"></p>
+                <div class="flex items-center gap-3 pt-2">
+                    <button type="button" onclick="closeUnansweredModal()" class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition">
+                        Lengkapi Dulu
+                    </button>
+                    <button type="button" onclick="confirmSubmitTest()" class="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs shadow-md transition">
+                        Tetap Kirim
+                    </button>
                 </div>
-            </div>
-
-            <div class="p-4 bg-amber-50/80 border border-amber-200 rounded-2xl text-amber-800 text-xs leading-relaxed text-left">
-                <strong>🔒 Informasi Kerahasiaan:</strong> Laporan hasil tes tidak ditampilkan di layar ini demi menjaga etika dan standar validasi psikotes. Tim Konselor/Psikolog Biro Psikologi HYUI akan menghubungi Anda untuk pembahasan hasil dan sesi konsultasi selanjutnya.
-            </div>
-
-            <div class="pt-2">
-                <button onclick="logout()" class="px-6 py-3 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-xl text-xs sm:text-sm transition-all shadow-md">
-                    Selesai & Kembali ke Halaman Utama
-                </button>
             </div>
         </div>
 
@@ -479,12 +464,26 @@
             }
 
             updateProgress();
-            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         function selectAnswer(index, val) {
             userAnswers[index] = val;
-            renderPage();
+
+            // Direct update visual tanpa refresh halaman atau reset scroll
+            const yesBtn = document.getElementById(`btn_yes_${index}`);
+            const noBtn = document.getElementById(`btn_no_${index}`);
+
+            if (yesBtn && noBtn) {
+                if (val === 1) {
+                    yesBtn.className = "flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold border transition-all bg-emerald-600 text-white border-emerald-600 shadow-md shadow-emerald-600/20 scale-[1.02]";
+                    noBtn.className = "flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold border transition-all bg-slate-50 text-slate-700 border-slate-200 hover:bg-rose-50 hover:border-rose-300";
+                } else {
+                    yesBtn.className = "flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold border transition-all bg-slate-50 text-slate-700 border-slate-200 hover:bg-emerald-50 hover:border-emerald-300";
+                    noBtn.className = "flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold border transition-all bg-rose-600 text-white border-rose-600 shadow-md shadow-rose-600/20 scale-[1.02]";
+                }
+            }
+
+            updateProgress();
         }
 
         function updateProgress() {
@@ -497,14 +496,26 @@
         function changePage(delta) {
             currentPage += delta;
             renderPage();
+            // Scroll ke atas hanya dijalankan saat berpindah halaman
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        async function calculateResult() {
+        function calculateResult() {
             const answeredCount = Object.keys(userAnswers).length;
             if (answeredCount < totalQuestions) {
-                const proceed = confirm(`Anda baru menjawab ${answeredCount} dari ${totalQuestions} pertanyaan. Apakah Anda yakin ingin mengirimkan tes sekarang?`);
-                if (!proceed) return;
+                document.getElementById('unansweredModalText').innerText = `Anda baru menjawab ${answeredCount} dari ${totalQuestions} pertanyaan. Apakah Anda yakin ingin mengirimkan tes sekarang?`;
+                document.getElementById('unansweredModal').classList.remove('hidden');
+                return;
             }
+            confirmSubmitTest();
+        }
+
+        function closeUnansweredModal() {
+            document.getElementById('unansweredModal').classList.add('hidden');
+        }
+
+        async function confirmSubmitTest() {
+            closeUnansweredModal();
 
             const answersArray = [];
             questions.forEach((q, idx) => {
@@ -534,7 +545,7 @@
                 }
             }
 
-            // Tampilkan Layar Konfirmasi Selesai (Laporan langsung terkirim ke Biro, tidak ditampilkan ke peserta)
+            // Tampilkan Layar Konfirmasi Selesai
             document.getElementById('testScreen').classList.add('hidden');
             document.getElementById('resultScreen').classList.remove('hidden');
 
