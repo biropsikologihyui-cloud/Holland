@@ -1,95 +1,260 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" class="h-full bg-slate-50">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Holland Code (RIASEC) Aptitude Test</title>
-    <!-- Tailwind CSS CDN -->
+    <title>Holland Aptitude Test (RIASEC) - Biro Psikologi HYUI</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Chart.js CDN for Radar Chart Results -->
+    <!-- Google Font Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'glow': '0 0 25px -5px rgba(79, 70, 229, 0.15)',
+                        'card': '0 10px 30px -5px rgba(15, 23, 42, 0.05)',
+                    }
+                }
+            }
+        }
+    </script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
-        body {
-            font-family: 'Inter', sans-serif;
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+        @media print {
+            .no-print { display: none !important; }
+            body { background: white !important; }
+            .print-card { box-shadow: none !important; border: 1px solid #e2e8f0 !important; }
         }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col justify-between selection:bg-indigo-500 selection:text-white">
+<body class="bg-slate-50/70 text-slate-800 min-h-full flex flex-col justify-between antialiased selection:bg-indigo-500 selection:text-white">
 
-    <!-- Header Navigation -->
-    <header class="bg-indigo-700 text-white shadow-lg sticky top-0 z-40">
-        <div class="max-w-5xl mx-auto px-4 py-3 flex justify-between items-center">
-            <div class="flex items-center space-x-3">
-                <div class="bg-white/10 p-2 rounded-lg backdrop-blur-sm">
-                    <svg class="w-6 h-6 text-indigo-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                </div>
+    <!-- Top Header Navigation -->
+    <header class="bg-white/90 backdrop-blur-md border-b border-slate-200/80 sticky top-0 z-40 shadow-sm no-print">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex justify-between items-center">
+            <!-- Brand Logo -->
+            <div class="flex items-center gap-3">
+                <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSYDsyJ6zrhW0u9Ww93eekyekC1BMlqhQ9kQn8kAQ5d5g&s=10" 
+                     alt="Logo Biro Psikologi HYUI" 
+                     class="w-10 h-10 object-contain rounded-xl bg-slate-50 p-1 border border-slate-200/80 shadow-sm"
+                     onerror="this.onerror=null; this.src='https://placehold.co/100x100/4f46e5/ffffff?text=HYUI';">
                 <div>
-                    <h1 class="text-lg md:text-xl font-bold tracking-tight">Holland Aptitude Test</h1>
-                    <p class="text-xs text-indigo-200 hidden sm:block">Tes Minat Bakat RIASEC (108 Pertanyaan)</p>
+                    <h1 class="text-base sm:text-lg font-bold bg-gradient-to-r from-slate-900 to-indigo-950 bg-clip-text text-transparent">
+                        Holland Aptitude Test
+                    </h1>
+                    <p class="text-[11px] font-medium text-indigo-600 tracking-wide">Biro Psikologi HYUI</p>
                 </div>
             </div>
-            <div id="userInfo" class="hidden flex items-center space-x-3">
-                <span id="displayUsername" class="text-xs font-semibold bg-indigo-800/80 border border-indigo-500/50 px-3 py-1.5 rounded-full shadow-inner"></span>
-                <button onclick="logout()" class="text-xs bg-rose-600 hover:bg-rose-500 px-3 py-1.5 rounded-lg transition-all shadow-sm">Keluar</button>
+
+            <!-- User Info & Action Controls -->
+            <div id="userInfo" class="hidden flex items-center gap-2 sm:gap-3">
+                <div class="flex items-center gap-2 bg-slate-100/80 px-3 py-1.5 rounded-xl border border-slate-200/60">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span id="displayUsername" class="text-xs sm:text-sm font-semibold text-slate-700"></span>
+                </div>
+                <button onclick="logout()" class="text-xs bg-rose-50 hover:bg-rose-100 text-rose-600 font-semibold px-3.5 py-2 rounded-xl border border-rose-200/60 transition-all flex items-center gap-1.5">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                    <span class="hidden sm:inline">Keluar</span>
+                </button>
             </div>
         </div>
     </header>
 
-    <!-- Main Content Container -->
-    <main class="max-w-4xl mx-auto px-4 py-8 w-full flex-grow">
+    <!-- Main Content Area -->
+    <main class="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-10 flex-grow w-full">
 
-        <!-- LOGIN SCREEN -->
-        <div id="loginScreen" class="max-w-md mx-auto my-8 bg-white p-8 rounded-2xl shadow-xl border border-slate-100 transition-all">
+        <!-- LOGIN & IDENTITAS PESERTA SCREEN -->
+        <div id="loginScreen" class="max-w-xl mx-auto my-4 sm:my-6 bg-white p-6 sm:p-8 rounded-3xl shadow-card border border-slate-100 transition-all">
             <div class="text-center mb-6">
-                <div class="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-inner">
-                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                <div class="w-20 h-20 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-sm border border-slate-200/70 p-2">
+                    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSYDsyJ6zrhW0u9Ww93eekyekC1BMlqhQ9kQn8kAQ5d5g&s=10" 
+                         alt="Logo Biro Psikologi HYUI" 
+                         class="w-full h-full object-contain rounded-xl"
+                         onerror="this.onerror=null; this.src='https://placehold.co/100x100/4f46e5/ffffff?text=HYUI';">
                 </div>
-                <h2 class="text-2xl font-bold text-slate-800">Masuk ke Sistem Tes</h2>
-                <p class="text-xs text-slate-500 mt-1">Silakan masukkan username dan password yang diberikan oleh Biro Psikologi HYUI.</p>
+                <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Identitas Pengisi Tes</h2>
+                <p class="text-xs text-slate-500 mt-1">Isi data diri Anda dengan lengkap sebelum memulai tes minat bakat.</p>
             </div>
             
             <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 mb-1 tracking-wider uppercase">Username</label>
-                    <input type="text" id="loginUsername" required placeholder="Masukkan username Anda" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none text-sm transition">
+                <!-- Box Akses Kredensial Biro -->
+                <div class="sm:col-span-2 bg-indigo-50/60 p-4 rounded-2xl border border-indigo-100">
+                    <div class="text-xs font-bold text-indigo-900 mb-3 flex items-center gap-1.5">
+                        <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                        <span>Akun & Kode Akses Diberikan Oleh Biro Psikologi HYUI</span>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1 uppercase tracking-wider">Username / ID Peserta <span class="text-rose-500">*</span></label>
+                            <input type="text" id="userUsername" required placeholder="Contoh: HYUI-2026-001" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-xs font-semibold bg-white">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1 uppercase tracking-wider">Password / PIN Akses <span class="text-rose-500">*</span></label>
+                            <input type="password" id="userPassword" required placeholder="••••••••" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-xs font-semibold bg-white">
+                        </div>
+                    </div>
                 </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 mb-1 tracking-wider uppercase">Password</label>
-                    <input type="password" id="loginPassword" required placeholder="Masukkan password Anda" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none text-sm transition">
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="sm:col-span-2">
+                        <label class="block text-xs font-bold text-slate-700 mb-1 uppercase tracking-wider">Nama Lengkap <span class="text-rose-500">*</span></label>
+                        <input type="text" id="userNama" required placeholder="Contoh: Anisa Rahmawati" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-xs font-medium bg-slate-50/50 focus:bg-white">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1 uppercase tracking-wider">Usia (Tahun) <span class="text-rose-500">*</span></label>
+                        <input type="number" id="userUsia" min="10" max="99" required placeholder="Contoh: 17" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-xs font-medium bg-slate-50/50 focus:bg-white">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1 uppercase tracking-wider">Jenis Kelamin <span class="text-rose-500">*</span></label>
+                        <select id="userGender" required class="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-xs font-medium bg-slate-50/50 focus:bg-white">
+                            <option value="">-- Pilih Jenis Kelamin --</option>
+                            <option value="Laki-laki">Laki-laki</option>
+                            <option value="Perempuan">Perempuan</option>
+                        </select>
+                    </div>
+
+                    <div class="sm:col-span-2">
+                        <label class="block text-xs font-bold text-slate-700 mb-1 uppercase tracking-wider">Pendidikan / Instansi <span class="text-rose-500">*</span></label>
+                        <input type="text" id="userInstansi" required placeholder="Contoh: SMA Negeri 1 / Universitas HYUI" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-xs font-medium bg-slate-50/50 focus:bg-white">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1 uppercase tracking-wider">No. WhatsApp / HP <span class="text-rose-500">*</span></label>
+                        <input type="tel" id="userNoHp" required placeholder="08123456789" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-xs font-medium bg-slate-50/50 focus:bg-white">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1 uppercase tracking-wider">Email <span class="text-rose-500">*</span></label>
+                        <input type="email" id="userEmail" required placeholder="nama@email.com" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-xs font-medium bg-slate-50/50 focus:bg-white">
+                    </div>
                 </div>
-                <div id="loginError" class="text-rose-600 text-xs font-medium hidden text-center bg-rose-50 p-2.5 rounded-lg border border-rose-200">Username atau Password tidak valid!</div>
-                <button type="submit" id="btnLoginSubmit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl font-semibold shadow-md hover:shadow-indigo-200 transition-all duration-200 text-sm">Masuk Sekarang</button>
+
+                <div id="loginError" class="text-rose-600 text-xs font-semibold hidden text-center bg-rose-50 p-3 rounded-xl border border-rose-200/80">
+                    Mohon lengkapi seluruh data identitas Anda!
+                </div>
+
+                <button type="submit" id="btnLoginSubmit" class="w-full bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white py-3.5 rounded-2xl font-bold shadow-lg shadow-indigo-500/25 transition-all duration-200 text-xs sm:text-sm active:scale-[0.99] flex items-center justify-center gap-2 mt-2">
+                    <span>Mulai Pengerjaan Tes</span>
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                </button>
             </form>
+
+            <div class="mt-4 p-3 bg-slate-50 border border-slate-200/80 rounded-xl text-center">
+                <p class="text-[11px] text-slate-500">🔒 Data diri Anda bersifat rahasia dan hanya digunakan untuk keperluan Laporan Hasil Tes oleh Konselor Biro Psikologi HYUI.</p>
+            </div>
         </div>
 
         <!-- TEST SCREEN -->
         <div id="testScreen" class="hidden space-y-6">
-    <!-- IMPORT MODAL -->
-    <div id="importModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex justify-center items-center p-4 z-50">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 border border-slate-100 space-y-4">
-            <div class="flex justify-between items-center pb-2 border-b">
-                <h3 class="text-base font-bold text-slate-800">Import & Skoring String RIASEC</h3>
-                <button onclick="hideImportModal()" class="text-slate-400 hover:text-slate-600 text-lg">&times;</button>
+            
+            <!-- Floating Progress Header Card -->
+            <div class="bg-white p-5 rounded-2xl shadow-card border border-slate-200/70">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+                    <div class="flex items-center gap-2">
+                        <span id="pageIndicator" class="bg-indigo-50 text-indigo-700 font-bold px-3 py-1 rounded-xl text-xs border border-indigo-100">Halaman 1 dari 11</span>
+                        <span class="text-xs text-slate-500">Maksimal 10 soal per layar</span>
+                    </div>
+                    <span id="progressPercent" class="text-xs font-bold text-slate-700">0% Terjawab (0/108)</span>
+                </div>
+                <!-- Progress Bar Track -->
+                <div class="w-full bg-slate-100 h-3 rounded-full overflow-hidden p-0.5 border border-slate-200/50">
+                    <div id="progressBar" class="bg-gradient-to-r from-indigo-500 via-indigo-600 to-violet-600 h-full rounded-full w-0 transition-all duration-300"></div>
+                </div>
             </div>
-            <p class="text-xs text-slate-500">Tempelkan string jawaban berformat RIASEC (contoh: RIASEC00100...181818) di bawah ini untuk skoring otomatis secara cepat:</p>
-            <textarea id="importStringInput" rows="5" placeholder="RIASEC001000..." class="w-full p-3 border rounded-xl text-xs font-mono focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-slate-50"></textarea>
-            <div class="flex justify-end gap-2 pt-2">
-                <button type="button" onclick="hideImportModal()" class="px-4 py-2 text-xs font-medium text-slate-600 hover:bg-slate-100 rounded-xl">Batal</button>
-                <button type="button" onclick="processImportString()" class="px-5 py-2 bg-indigo-600 text-white text-xs font-semibold rounded-xl hover:bg-indigo-700 transition">Hitung Skor Sekarang</button>
+
+            <!-- Dynamic Questions Container -->
+            <div id="questionsContainer" class="space-y-3.5"></div>
+
+            <!-- Bottom Navigation Bar Controls -->
+            <div class="bg-white p-4 rounded-2xl shadow-card border border-slate-200/70 flex justify-between items-center gap-4">
+                <button type="button" id="prevBtn" onclick="changePage(-1)" class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs sm:text-sm disabled:opacity-40 disabled:cursor-not-allowed transition flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                    <span>Sebelumnya</span>
+                </button>
+
+                <div class="text-xs font-semibold text-slate-400 hidden sm:block">
+                    Pastikan mengisi setiap pertanyaan secara jujur sesuai minat Anda.
+                </div>
+
+                <button type="button" id="nextBtn" onclick="changePage(1)" class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs sm:text-sm shadow-md shadow-indigo-500/20 transition flex items-center gap-2">
+                    <span>Selanjutnya</span>
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                </button>
+
+                <button type="button" id="submitBtn" onclick="calculateResult()" class="hidden px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs sm:text-sm shadow-md shadow-emerald-500/20 transition flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                    <span>Kirim Jawaban & Selesai</span>
+                </button>
             </div>
         </div>
-    </div>
+
+        <!-- THANK YOU / CONFIRMATION SCREEN (Laporan Tidak Ditampilkan Ke Peserta) -->
+        <div id="resultScreen" class="hidden max-w-2xl mx-auto my-6 bg-white p-8 sm:p-10 rounded-3xl shadow-xl border border-slate-100 text-center space-y-6">
+            <div class="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto shadow-inner border border-emerald-200 animate-bounce">
+                <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+            </div>
+
+            <div class="space-y-2">
+                <span class="bg-indigo-50 text-indigo-700 border border-indigo-100 text-xs px-3.5 py-1 rounded-full font-bold">Status: Jawaban Berhasil Terkirim</span>
+                <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900">Terima Kasih, <span id="displaySubmittedName" class="text-indigo-600">Peserta</span>!</h2>
+                <p class="text-xs sm:text-sm text-slate-600 max-w-md mx-auto leading-relaxed">
+                    Seluruh tes telah selesai dikerjakan. Laporan hasil psikotes format <strong>PDF</strong> telah dikirim secara langsung ke <strong>Email Biro Psikologi HYUI</strong> untuk kebutuhan analisis psikolog.
+                </p>
+            </div>
+
+            <!-- Identity Summary Card -->
+            <div class="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 text-left max-w-md mx-auto text-xs space-y-2">
+                <div class="font-bold text-slate-800 border-b border-slate-200 pb-1.5 flex items-center justify-between">
+                    <span>Ringkasan Pengajuan:</span>
+                    <span class="text-emerald-600 font-extrabold">✓ Terkirim ke Biro</span>
+                </div>
+                <div class="grid grid-cols-2 gap-2 text-slate-600">
+                    <div><strong class="text-slate-800">Nama:</strong> <span id="summaryNama">-</span></div>
+                    <div><strong class="text-slate-800">Usia:</strong> <span id="summaryUsia">-</span> thn</div>
+                    <div><strong class="text-slate-800">Gender:</strong> <span id="summaryGender">-</span></div>
+                    <div><strong class="text-slate-800">Instansi:</strong> <span id="summaryInstansi">-</span></div>
+                    <div class="col-span-2"><strong class="text-slate-800">Tujuan Laporan:</strong> Admin Biro Psikologi HYUI</div>
+                </div>
+            </div>
+
+            <div class="p-4 bg-amber-50/80 border border-amber-200 rounded-2xl text-amber-800 text-xs leading-relaxed text-left">
+                <strong>🔒 Informasi Kerahasiaan:</strong> Laporan hasil tes tidak ditampilkan di layar ini demi menjaga etika dan standar validasi psikotes. Tim Konselor/Psikolog Biro Psikologi HYUI akan menghubungi Anda untuk pembahasan hasil dan sesi konsultasi selanjutnya.
+            </div>
+
+            <div class="pt-2">
+                <button onclick="logout()" class="px-6 py-3 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-xl text-xs sm:text-sm transition-all shadow-md">
+                    Selesai & Kembali ke Halaman Utama
+                </button>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200/80 py-4 text-center text-xs text-slate-400 no-print">
+        &copy; Biro Psikologi HYUI — Sistem Tes Minat Bakat Holland RIASEC.
+    </footer>
 
     <script>
-        // Salin URL Deployment Web App Google Apps Script Anda ke sini:
         const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbykO6LzVuvkw50Ai9Bd7ZvtwikTNgQXaQUjAzUq5Y3gSVum6sjSLc0IdVIEtMnSJqiN/exec";
 
         let currentActiveUser = null;
 
-        // Question Bank: Exactly 108 Questions (18 questions per RIASEC category)
+        // 108 Pertanyaan RIASEC (Tepat 18 per Kategori: R, I, A, S, E, C)
         const questions = [
             // Realistic (R) - 18 items
             { cat: 'R', text: "Saya suka merakit atau mengoperasikan mesin dan peralatan mekanik." },
@@ -217,58 +382,46 @@
         let currentPage = 1;
         const totalPages = Math.ceil(totalQuestions / questionsPerPage);
 
-        // Store user answers: { [index]: 1 (Ya) | 0 (Tidak) }
         let userAnswers = {};
-        let riasecChartObj = null;
 
-        async function handleLogin(e) {
+        function handleLogin(e) {
             e.preventDefault();
-            const u = document.getElementById('loginUsername').value.trim();
-            const p = document.getElementById('loginPassword').value.trim();
-            const btn = document.getElementById('btnLoginSubmit');
-            const errEl = document.getElementById('loginError');
+            const username = document.getElementById('userUsername').value.trim();
+            const password = document.getElementById('userPassword').value.trim();
+            const nama = document.getElementById('userNama').value.trim();
+            const usia = document.getElementById('userUsia').value.trim();
+            const gender = document.getElementById('userGender').value;
+            const instansi = document.getElementById('userInstansi').value.trim();
+            const noHp = document.getElementById('userNoHp').value.trim();
+            const email = document.getElementById('userEmail').value.trim();
 
-            errEl.classList.add('hidden');
-            btn.disabled = true;
-            btn.innerText = "Memverifikasi...";
-
-            try {
-                // Autentikasi langsung ke Google Apps Script tanpa hardcoded password
-                const response = await fetch(APPS_SCRIPT_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify({
-                        action: 'login',
-                        username: u,
-                        password: p
-                    })
-                });
-
-                const res = await response.json();
-
-                if (res.status === 'success') {
-                    currentActiveUser = res.user || { username: u, nama: u };
-                    document.getElementById('loginScreen').classList.add('hidden');
-                    document.getElementById('testScreen').classList.remove('hidden');
-                    document.getElementById('userInfo').classList.remove('hidden');
-                    document.getElementById('displayUsername').innerText = currentActiveUser.nama || currentActiveUser.username;
-                    renderPage();
-                } else {
-                    errEl.innerText = res.message || "Username atau Password salah!";
-                    errEl.classList.remove('hidden');
-                }
-            } catch (error) {
-                console.error("Login API Error:", error);
-                errEl.innerText = "Gagal terhubung ke Server Biro. Periksa koneksi internet Anda.";
-                errEl.classList.remove('hidden');
-            } finally {
-                btn.disabled = false;
-                btn.innerText = "Masuk Sekarang";
+            if (!username || !password || !nama || !usia || !gender || !instansi || !noHp || !email) {
+                document.getElementById('loginError').classList.remove('hidden');
+                return;
             }
+
+            currentActiveUser = {
+                username: username,
+                password: password,
+                nama: nama,
+                usia: usia,
+                gender: gender,
+                instansi: instansi,
+                noHp: noHp,
+                email: email
+            };
+
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('testScreen').classList.remove('hidden');
+            document.getElementById('userInfo').classList.remove('hidden');
+            document.getElementById('displayUsername').innerText = `${currentActiveUser.nama} (${currentActiveUser.username})`;
+            renderPage();
         }
 
         function logout() {
             currentActiveUser = null;
+            userAnswers = {};
+            currentPage = 1;
             document.getElementById('userInfo').classList.add('hidden');
             document.getElementById('testScreen').classList.add('hidden');
             document.getElementById('resultScreen').classList.add('hidden');
@@ -286,31 +439,34 @@
             for (let i = startIndex; i < endIndex; i++) {
                 const q = questions[i];
                 const qNum = i + 1;
-                const isCheckedYes = userAnswers[i] === 1 ? 'checked' : '';
-                const isCheckedNo = userAnswers[i] === 0 ? 'checked' : '';
+                const isCheckedYes = userAnswers[i] === 1;
+                const isCheckedNo = userAnswers[i] === 0;
 
                 const card = document.createElement('div');
-                card.className = "bg-white p-4 sm:p-5 rounded-xl border border-slate-200/80 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:border-indigo-200 transition-all";
+                card.className = "bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-card flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:border-indigo-300 transition-all group";
                 card.innerHTML = `
                     <div class="flex items-start gap-3 flex-1">
-                        <span class="bg-indigo-50 text-indigo-700 font-bold px-2.5 py-1 rounded-lg text-xs shrink-0 border border-indigo-100">${qNum}</span>
-                        <p class="text-slate-700 text-xs sm:text-sm font-medium leading-relaxed">${q.text}</p>
+                        <span class="bg-indigo-50 text-indigo-700 font-extrabold px-3 py-1.5 rounded-xl text-xs shrink-0 border border-indigo-100 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+                            ${qNum}
+                        </span>
+                        <p class="text-slate-800 text-xs sm:text-sm font-semibold leading-relaxed pt-0.5">${q.text}</p>
                     </div>
-                    <div class="flex items-center gap-4 self-end sm:self-center border-t sm:border-t-0 pt-2 sm:pt-0 w-full sm:w-auto justify-end shrink-0">
-                        <label class="inline-flex items-center cursor-pointer gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-emerald-50 hover:border-emerald-200 transition">
-                            <input type="radio" name="q_${i}" value="1" ${isCheckedYes} onchange="saveAnswer(${i}, 1)" class="w-4 h-4 text-emerald-600 focus:ring-emerald-500">
-                            <span class="text-xs font-bold text-slate-700">Ya</span>
-                        </label>
-                        <label class="inline-flex items-center cursor-pointer gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-rose-50 hover:border-rose-200 transition">
-                            <input type="radio" name="q_${i}" value="0" ${isCheckedNo} onchange="saveAnswer(${i}, 0)" class="w-4 h-4 text-rose-600 focus:ring-rose-500">
-                            <span class="text-xs font-bold text-slate-700">Tidak</span>
-                        </label>
+
+                    <div class="flex items-center gap-2 self-end sm:self-center border-t sm:border-t-0 pt-3 sm:pt-0 w-full sm:w-auto justify-end shrink-0">
+                        <button type="button" onclick="selectAnswer(${i}, 1)" id="btn_yes_${i}" class="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold border transition-all ${isCheckedYes ? 'bg-emerald-600 text-white border-emerald-600 shadow-md shadow-emerald-600/20 scale-[1.02]' : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-emerald-50 hover:border-emerald-300'}">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+                            <span>Ya</span>
+                        </button>
+
+                        <button type="button" onclick="selectAnswer(${i}, 0)" id="btn_no_${i}" class="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold border transition-all ${isCheckedNo ? 'bg-rose-600 text-white border-rose-600 shadow-md shadow-rose-600/20 scale-[1.02]' : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-rose-50 hover:border-rose-300'}">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
+                            <span>Tidak</span>
+                        </button>
                     </div>
                 `;
                 container.appendChild(card);
             }
 
-            // Update Page Controls & Text
             document.getElementById('pageIndicator').innerText = `Halaman ${currentPage} dari ${totalPages}`;
             document.getElementById('prevBtn').disabled = currentPage === 1;
 
@@ -326,9 +482,9 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        function saveAnswer(index, val) {
+        function selectAnswer(index, val) {
             userAnswers[index] = val;
-            updateProgress();
+            renderPage();
         }
 
         function updateProgress() {
@@ -346,137 +502,47 @@
         async function calculateResult() {
             const answeredCount = Object.keys(userAnswers).length;
             if (answeredCount < totalQuestions) {
-                const proceed = confirm(`Anda baru menjawab ${answeredCount} dari ${totalQuestions} pertanyaan. Apakah Anda yakin ingin melihat hasil sekarang?`);
+                const proceed = confirm(`Anda baru menjawab ${answeredCount} dari ${totalQuestions} pertanyaan. Apakah Anda yakin ingin mengirimkan tes sekarang?`);
                 if (!proceed) return;
             }
 
             const answersArray = [];
-            const scores = { R: 0, I: 0, A: 0, S: 0, E: 0, C: 0 };
-
             questions.forEach((q, idx) => {
-                const val = userAnswers[idx] === 1 ? 1 : 0;
-                answersArray.push(val);
-                if (val === 1) scores[q.cat]++;
+                answersArray.push(userAnswers[idx] === 1 ? 1 : 0);
             });
 
-            // Kirim Hasil Pengujian ke Backend Google Apps Script (Auto-save ke Sheet & Biro Email)
-            try {
-                fetch(APPS_SCRIPT_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify({
-                        action: 'submit_test',
-                        username: currentActiveUser ? currentActiveUser.username : 'Guest',
-                        nama: currentActiveUser ? currentActiveUser.nama : 'Guest',
-                        answers: answersArray
-                    })
-                });
-            } catch (err) {
-                console.error("Gagal mengirimkan data ke Biro:", err);
+            // Tampilkan UI Loading saat Mengirimkan Data
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = `<span class="animate-spin">⏳</span><span>Mengirim & Mengenerate PDF...</span>`;
+
+            const payload = {
+                action: 'submit_test',
+                identity: currentActiveUser,
+                answers: answersArray
+            };
+
+            if (!APPS_SCRIPT_URL.includes("YOUR_DEPLOYMENT_ID")) {
+                try {
+                    await fetch(APPS_SCRIPT_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                        body: JSON.stringify(payload)
+                    });
+                } catch (err) {
+                    console.error("Gagal mengirimkan data ke Biro:", err);
+                }
             }
 
+            // Tampilkan Layar Konfirmasi Selesai (Laporan langsung terkirim ke Biro, tidak ditampilkan ke peserta)
             document.getElementById('testScreen').classList.add('hidden');
             document.getElementById('resultScreen').classList.remove('hidden');
 
-            renderChartAndAnalysis(scores);
-        }
-
-        function renderChartAndAnalysis(scores) {
-            const catNames = {
-                R: 'Realistic',
-                I: 'Investigative',
-                A: 'Artistic',
-                S: 'Social',
-                E: 'Enterprising',
-                C: 'Conventional'
-            };
-
-            const sortedCats = Object.keys(scores).sort((a, b) => scores[b] - scores[a]);
-            const top3Code = sortedCats.slice(0, 3).join('');
-
-            document.getElementById('topCode').innerText = top3Code;
-
-            // Breakdown list
-            const breakdownEl = document.getElementById('categoryBreakdown');
-            breakdownEl.innerHTML = '';
-            sortedCats.forEach(cat => {
-                const score = scores[cat];
-                const pct = Math.round((score / 18) * 100);
-                breakdownEl.innerHTML += `
-                    <div class="flex items-center justify-between text-xs py-1.5 border-b border-slate-200/60">
-                        <span class="font-semibold text-slate-700">${catNames[cat]} (${cat})</span>
-                        <div class="flex items-center gap-2">
-                            <span class="font-mono font-bold text-indigo-600">${score}/18</span>
-                            <span class="text-slate-400">(${pct}%)</span>
-                        </div>
-                    </div>
-                `;
-            });
-
-            // Career Recommendations Text Map
-            const details = {
-                R: "<b>Realistic (Praktis & Fisik)</b>: Menyukai pekerjaan praktis, penggunaan mesin, alat-alat perkakas, dan outdoor.<br><span class='text-slate-500'>Prospek Karir:</span> Tekniker, Mekanik, Pilot, Arsitek Landskap, Otomotif, Teknik Sipil.",
-                I: "<b>Investigative (Analitis & Penelitian)</b>: Menyukai investigasi, analisis data, eksperimen, dan riset ilmiah.<br><span class='text-slate-500'>Prospek Karir:</span> Peneliti, Data Scientist, Dokter, Software Engineer, Ahli Biologi, Akademisi.",
-                A: "<b>Artistic (Kreatif & Ekspresif)</b>: Menyukai kreasi seni, ekspresi bebas, desain visual, musik, dan tulisan.<br><span class='text-slate-500'>Prospek Karir:</span> Desainer Grafis, Writer, Musisi, Arsitek, Animator, Fotografer.",
-                S: "<b>Social (Pelayanan & Edukasi)</b>: Menyukai kegiatan membantu, mengajar, membimbing, dan merawat orang lain.<br><span class='text-slate-500'>Prospek Karir:</span> Guru/Pengajar, Psikolog, Konselor, Perawat, Konsultan HRD.",
-                E: "<b>Enterprising (Persuasif & Bisnis)</b>: Menyukai kepemimpinan, pemasaran, negosiasi, dan kewirausahaan.<br><span class='text-slate-500'>Prospek Karir:</span> Wirausahawan, Manajer, Marketing Executive, Pengacara, Politisi.",
-                C: "<b>Conventional (Administratif & Detail)</b>: Menyukai data terstruktur, pencatatan, ketelitian, dan sistem kantor.<br><span class='text-slate-500'>Prospek Karir:</span> Akuntan, Auditor, Administrator Bank, Data Entry, Notaris."
-            };
-
-            const recTextEl = document.getElementById('recommendationText');
-            recTextEl.innerHTML = sortedCats.slice(0, 3).map(c => `
-                <div class="p-4 bg-white rounded-xl border border-indigo-100 shadow-sm border-l-4 border-l-indigo-600">
-                    ${details[c]}
-                </div>
-            `).join('');
-
-            // Build Radar Chart
-            const ctx = document.getElementById('riasecChart').getContext('2d');
-            if (riasecChartObj) riasecChartObj.destroy();
-
-            riasecChartObj = new Chart(ctx, {
-                type: 'radar',
-                data: {
-                    labels: ['Realistic', 'Investigative', 'Artistic', 'Social', 'Enterprising', 'Conventional'],
-                    datasets: [{
-                        label: 'Skor RIASEC',
-                        data: [scores.R, scores.I, scores.A, scores.S, scores.E, scores.C],
-                        backgroundColor: 'rgba(79, 70, 229, 0.25)',
-                        borderColor: 'rgba(79, 70, 229, 1)',
-                        borderWidth: 2,
-                        pointBackgroundColor: 'rgba(79, 70, 229, 1)',
-                        pointRadius: 4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    scales: {
-                        r: {
-                            angleLines: { color: '#e2e8f0' },
-                            grid: { color: '#f1f5f9' },
-                            pointLabels: {
-                                font: { size: 10, weight: '600', family: 'Inter' },
-                                color: '#475569'
-                            },
-                            suggestedMin: 0,
-                            suggestedMax: 18,
-                            ticks: { stepSize: 3, display: false }
-                        }
-                    },
-                    plugins: {
-                        legend: { display: false }
-                    }
-                }
-            });
-        }
-
-        function restartTest() {
-            userAnswers = {};
-            currentPage = 1;
-            document.getElementById('resultScreen').classList.add('hidden');
-            document.getElementById('testScreen').classList.remove('hidden');
-            renderPage();
+            document.getElementById('displaySubmittedName').innerText = currentActiveUser.nama;
+            document.getElementById('summaryNama').innerText = currentActiveUser.nama;
+            document.getElementById('summaryUsia').innerText = currentActiveUser.usia;
+            document.getElementById('summaryGender').innerText = currentActiveUser.gender;
+            document.getElementById('summaryInstansi').innerText = currentActiveUser.instansi;
         }
     </script>
 </body>
