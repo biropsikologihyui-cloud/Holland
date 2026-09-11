@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Holland Code (RIASEC) Aptitude Test</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js CDN for Radar Chart Results -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col justify-between selection:bg-indigo-500 selection:text-white">
+
+    <!-- Header Navigation -->
+    <header class="bg-indigo-700 text-white shadow-lg sticky top-0 z-40">
+        <div class="max-w-5xl mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <div class="bg-white/10 p-2 rounded-lg backdrop-blur-sm">
+                    <svg class="w-6 h-6 text-indigo-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-lg md:text-xl font-bold tracking-tight">Holland Aptitude Test</h1>
+                    <p class="text-xs text-indigo-200 hidden sm:block">Tes Minat Bakat RIASEC (108 Pertanyaan)</p>
+                </div>
+            </div>
+            <div id="userInfo" class="hidden flex items-center space-x-3">
+                <span id="displayUsername" class="text-xs font-semibold bg-indigo-800/80 border border-indigo-500/50 px-3 py-1.5 rounded-full shadow-inner"></span>
+                <button onclick="logout()" class="text-xs bg-rose-600 hover:bg-rose-500 px-3 py-1.5 rounded-lg transition-all shadow-sm">Keluar</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="max-w-4xl mx-auto px-4 py-8 w-full flex-grow">
+
+        <!-- LOGIN SCREEN -->
+        <div id="loginScreen" class="max-w-md mx-auto my-8 bg-white p-8 rounded-2xl shadow-xl border border-slate-100 transition-all">
+            <div class="text-center mb-6">
+                <div class="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-inner">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                </div>
+                <h2 class="text-2xl font-bold text-slate-800">Masuk ke Sistem Tes</h2>
+                <p class="text-xs text-slate-500 mt-1">Silakan masukkan username dan password yang diberikan oleh Biro Psikologi HYUI.</p>
+            </div>
+            
+            <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1 tracking-wider uppercase">Username</label>
+                    <input type="text" id="loginUsername" required placeholder="Masukkan username Anda" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none text-sm transition">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1 tracking-wider uppercase">Password</label>
+                    <input type="password" id="loginPassword" required placeholder="Masukkan password Anda" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none text-sm transition">
+                </div>
+                <div id="loginError" class="text-rose-600 text-xs font-medium hidden text-center bg-rose-50 p-2.5 rounded-lg border border-rose-200">Username atau Password tidak valid!</div>
+                <button type="submit" id="btnLoginSubmit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl font-semibold shadow-md hover:shadow-indigo-200 transition-all duration-200 text-sm">Masuk Sekarang</button>
+            </form>
+        </div>
+
+        <!-- TEST SCREEN -->
+        <div id="testScreen" class="hidden space-y-6">
+    <!-- IMPORT MODAL -->
+    <div id="importModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex justify-center items-center p-4 z-50">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 border border-slate-100 space-y-4">
+            <div class="flex justify-between items-center pb-2 border-b">
+                <h3 class="text-base font-bold text-slate-800">Import & Skoring String RIASEC</h3>
+                <button onclick="hideImportModal()" class="text-slate-400 hover:text-slate-600 text-lg">&times;</button>
+            </div>
+            <p class="text-xs text-slate-500">Tempelkan string jawaban berformat RIASEC (contoh: RIASEC00100...181818) di bawah ini untuk skoring otomatis secara cepat:</p>
+            <textarea id="importStringInput" rows="5" placeholder="RIASEC001000..." class="w-full p-3 border rounded-xl text-xs font-mono focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-slate-50"></textarea>
+            <div class="flex justify-end gap-2 pt-2">
+                <button type="button" onclick="hideImportModal()" class="px-4 py-2 text-xs font-medium text-slate-600 hover:bg-slate-100 rounded-xl">Batal</button>
+                <button type="button" onclick="processImportString()" class="px-5 py-2 bg-indigo-600 text-white text-xs font-semibold rounded-xl hover:bg-indigo-700 transition">Hitung Skor Sekarang</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Salin URL Deployment Web App Google Apps Script Anda ke sini:
+        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbykO6LzVuvkw50Ai9Bd7ZvtwikTNgQXaQUjAzUq5Y3gSVum6sjSLc0IdVIEtMnSJqiN/exec";
+
+        let currentActiveUser = null;
+
+        // Question Bank: Exactly 108 Questions (18 questions per RIASEC category)
+        const questions = [
+            // Realistic (R) - 18 items
+            { cat: 'R', text: "Saya suka merakit atau mengoperasikan mesin dan peralatan mekanik." },
+            { cat: 'R', text: "Saya menikmati pekerjaan di luar ruangan seperti berkebun atau konstruksi." },
+            { cat: 'R', text: "Saya mahir menggunakan alat perkakas kayu atau besi." },
+            { cat: 'R', text: "Saya tertarik memperbaiki kendaraan atau peralatan elektronik yang rusak." },
+            { cat: 'R', text: "Saya lebih menyukai kegiatan praktis daripada teori atau konsep abstrak." },
+            { cat: 'R', text: "Saya suka membaca petunjuk teknis untuk merakit barang sendiri." },
+            { cat: 'R', text: "Saya menikmati kegiatan memancing, berkemah, atau olahraga outdoor." },
+            { cat: 'R', text: "Saya suka bekerja dengan hewan atau mengolah tanaman." },
+            { cat: 'R', text: "Saya lebih memilih membuat barang langsung dengan tangan saya sendiri." },
+            { cat: 'R', text: "Saya tertarik dengan bidang teknik sipil, otomotif, atau kelistrikan." },
+            { cat: 'R', text: "Saya merasa nyaman memakai pakaian kerja fisik atau lapangan." },
+            { cat: 'R', text: "Saya suka memecahkan masalah praktis pada benda mati." },
+            { cat: 'R', text: "Saya tertarik belajar cara kerja sistem mekanik dalam bangunan." },
+            { cat: 'R', text: "Saya lebih suka tugas nyata dengan hasil fisik yang langsung terlihat." },
+            { cat: 'R', text: "Saya menikmati menggambar denah atau cetak biru teknik." },
+            { cat: 'R', text: "Saya suka menggunakan alat ukur presisi seperti jangka sorong atau voltmeter." },
+            { cat: 'R', text: "Saya lebih suka instruksi kerja yang berfokus pada langkah fisik bertahap." },
+            { cat: 'R', text: "Saya tidak keberatan melakukan pekerjaan fisik yang menguras tenaga." },
+
+            // Investigative (I) - 18 items
+            { cat: 'I', text: "Saya suka menganalisis data, angka, atau fenomena alam." },
+            { cat: 'I', text: "Saya tertarik melakukan eksperimen ilmiah di laboratorium." },
+            { cat: 'I', text: "Saya suka memecahkan teka-teki logika atau soal matematika yang rumit." },
+            { cat: 'I', text: "Saya senang membaca jurnal ilmiah atau buku pengetahuan." },
+            { cat: 'I', text: "Saya sering bertanya-tanya tentang penyebab utama suatu masalah." },
+            { cat: 'I', text: "Saya menyukai tugas yang membutuhkan penelitian mendalam." },
+            { cat: 'I', text: "Saya lebih menggunakan pemikiran logis daripada emosi saat mengambil keputusan." },
+            { cat: 'I', text: "Saya tertarik pada bidang medis, biologi, atau fisika." },
+            { cat: 'I', text: "Saya senang mempelajari bahasa pemrograman komputer atau algoritma." },
+            { cat: 'I', text: "Saya merasa puas ketika berhasil menemukan solusi abstrak dari sebuah masalah." },
+            { cat: 'I', text: "Saya suka mengamati dan mengumpulkan informasi secara sistematis." },
+            { cat: 'I', text: "Saya menikmati diskusi ilmiah atau akademis yang mendalam." },
+            { cat: 'I', text: "Saya suka mengevaluasi teori atau konsep ilmiah baru." },
+            { cat: 'I', text: "Saya mandiri dan tenang saat bekerja memecahkan masalah rumit." },
+            { cat: 'I', text: "Saya tertarik meneliti sejarah atau perkembangan sains." },
+            { cat: 'I', text: "Saya suka menggunakan mikroskop atau alat analisis data saintifik." },
+            { cat: 'I', text: "Saya kritis terhadap informasi yang tidak memiliki bukti kuat." },
+            { cat: 'I', text: "Saya menikmati karier sebagai peneliti, analis, atau akademisi." },
+
+            // Artistic (A) - 18 items
+            { cat: 'A', text: "Saya suka mengekspresikan diri melalui seni, musik, atau tulisan." },
+            { cat: 'A', text: "Saya menyukai pekerjaan yang tidak kaku dan tidak terikat aturan ketat." },
+            { cat: 'A', text: "Saya sering memiliki ide-ide kreatif dan imajinatif." },
+            { cat: 'A', text: "Saya menikmati menghadiri pameran seni, konser, atau pertunjukan teater." },
+            { cat: 'A', text: "Saya suka mendesain tata letak, grafis, atau interior ruangan." },
+            { cat: 'A', text: "Saya tertarik menulis puisi, cerita, atau artikel opini." },
+            { cat: 'A', text: "Saya pandai memainkan alat musik atau bernyanyi." },
+            { cat: 'A', text: "Saya senang mencoba kombinasi warna, busana, atau estetika baru." },
+            { cat: 'A', text: "Saya lebih suka spontanitas daripada rutinitas yang terencana." },
+            { cat: 'A', text: "Saya peka terhadap keindahan alam, karya seni, atau desain visual." },
+            { cat: 'A', text: "Saya tertarik dalam dunia akting, fotografi, atau pembuatan film." },
+            { cat: 'A', text: "Saya suka menciptakan karya visual orisinal dengan tangan atau perangkat lunak." },
+            { cat: 'A', text: "Saya merasa terkekang jika harus mengikuti prosedur rutin berulang-ulang." },
+            { cat: 'A', text: "Saya mengekspresikan perasaan saya lewat media artistik." },
+            { cat: 'A', text: "Saya suka menggubah lagu, koreografi, atau naskah." },
+            { cat: 'A', text: "Saya menikmati lingkungan kerja yang fleksibel dan santai." },
+            { cat: 'A', text: "Saya selalu mencari sudut pandang unik dalam memandang sesuatu." },
+            { cat: 'A', text: "Saya berminat pada karir di bidang desain, media, atau seni kreatif." },
+
+            // Social (S) - 18 items
+            { cat: 'S', text: "Saya suka membantu orang lain menyelesaikan masalah pribadi mereka." },
+            { cat: 'S', text: "Saya menikmati mengajar, melatih, atau membimbing orang lain." },
+            { cat: 'S', text: "Saya mudah berempati dan memahami perasaan orang di sekitar saya." },
+            { cat: 'S', text: "Saya senang terlibat dalam kegiatan sosial atau relawan." },
+            { cat: 'S', text: "Saya suka bekerja dalam tim yang saling mendukung." },
+            { cat: 'S', text: "Saya memiliki keterampilan komunikasi interpersonal yang baik." },
+            { cat: 'S', text: "Saya merasa puas ketika bisa merawat orang yang sedang sakit atau butuh bantuan." },
+            { cat: 'S', text: "Saya tertarik pada bidang psikologi, konseling, atau keperawatan." },
+            { cat: 'S', text: "Saya suka menjadi penengah saat terjadi konflik antar kawan." },
+            { cat: 'S', text: "Saya menikmati menyambut orang baru dalam suatu komunitas." },
+            { cat: 'S', text: "Saya sabar saat menjelaskan hal baru kepada orang lain." },
+            { cat: 'S', text: "Saya mengutamakan hubungan baik di atas pencapaian materi." },
+            { cat: 'S', text: "Saya suka mengadakan diskusi kelompok atau lokakarya pengembangan diri." },
+            { cat: 'S', text: "Saya tertarik memahami perilaku manusia dan dinamika sosial." },
+            { cat: 'S', text: "Saya sering menjadi tempat curhat bagi teman-teman saya." },
+            { cat: 'S', text: "Saya suka berkolaborasi daripada berkompetisi secara tajam." },
+            { cat: 'S', text: "Saya ingin memberikan dampak positif bagi kehidupan masyarakat." },
+            { cat: 'S', text: "Saya cocok berkarir di bidang pendidikan, layanan sosial, atau HRD." },
+
+            // Enterprising (E) - 18 items
+            { cat: 'E', text: "Saya suka memimpin proyek atau mengarahkan sebuah tim." },
+            { cat: 'E', text: "Saya percaya diri saat berbicara di depan umum atau berpresentasi." },
+            { cat: 'E', text: "Saya senang meyakinkan atau membujuk orang lain untuk menerima ide saya." },
+            { cat: 'E', text: "Saya tertarik untuk memulai atau mengelola bisnis sendiri." },
+            { cat: 'E', text: "Saya berani mengambil risiko untuk meraih keuntungan atau keberhasilan." },
+            { cat: 'E', text: "Saya berambisi untuk mencapai posisi kepemimpinan atau target tinggi." },
+            { cat: 'E', text: "Saya menikmati negosiasi jual-beli atau kesepakatan bisnis." },
+            { cat: 'E', text: "Saya kompetitif dan bersemangat mencapai target pencapaian." },
+            { cat: 'E', text: "Saya pandai membangun jaringan (networking) dengan orang penting." },
+            { cat: 'E', text: "Saya suka merencanakan strategi pemasaran atau kampanye promosi." },
+            { cat: 'E', text: "Saya tidak ragu dalam mengambil keputusan penting dengan cepat." },
+            { cat: 'E', text: "Saya tertarik pada bidang politik, hukum, atau manajemen bisnis." },
+            { cat: 'E', text: "Saya menikmati persaingan dalam dunia usaha." },
+            { cat: 'E', text: "Saya pandai memanfaatkan peluang yang menguntungkan." },
+            { cat: 'E', text: "Saya suka mengorganisir acara besar atau kegiatan penggalangan dana." },
+            { cat: 'E', text: "Saya termotivasi oleh insentif finansial dan pengakuan atas keberhasilan." },
+            { cat: 'E', text: "Saya mahir menjual produk, jasa, atau gagasan." },
+            { cat: 'E', text: "Saya bercita-cita menjadi eksekutif, manajer, atau wirausahawan." },
+
+            // Conventional (C) - 18 items
+            { cat: 'C', text: "Saya suka bekerja dengan data, angka, dan dokumen secara teratur." },
+            { cat: 'C', text: "Saya menyukai pekerjaan yang memiliki aturan dan prosedur jelas." },
+            { cat: 'C', text: "Saya teliti dan cermat dalam memeriksa detail-detail kecil." },
+            { cat: 'C', text: "Saya senang menyusun arsip, jadwal, atau laporan keuangan." },
+            { cat: 'C', text: "Saya menyukai rutinitas kerja yang stabil dan dapat diprediksi." },
+            { cat: 'C', text: "Saya menghargai ketepatan waktu dan kerapian dalam bekerja." },
+            { cat: 'C', text: "Saya tertarik pada bidang akuntansi, administrasi, atau perbankan." },
+            { cat: 'C', text: "Saya nyaman mengoperasikan spreadsheet (seperti Excel) untuk olah data." },
+            { cat: 'C', text: "Saya menyukai instruksi langsung dari atasan daripada berasumsi sendiri." },
+            { cat: 'C', text: "Saya pandai mengorganisasi arsip fisik maupun digital secara terstruktur." },
+            { cat: 'C', text: "Saya selalu mengoreksi kembali pekerjaan saya agar terhindar dari kesalahan." },
+            { cat: 'C', text: "Saya lebih menyukai lingkungan kerja kantor yang teratur." },
+            { cat: 'C', text: "Saya disiplin dalam mengikuti standar operasional prosedur (SOP)." },
+            { cat: 'C', text: "Saya merasa puas jika semua berkas dan laporan tersusun rapi." },
+            { cat: 'C', text: "Saya mahir dalam tugas-tugas pengetikan, input data, dan audit." },
+            { cat: 'C', text: "Saya jarang menunda pekerjaan yang sudah terjadwal." },
+            { cat: 'C', text: "Saya lebih memilih kepastian daripada ketidakpastian dalam tugas." },
+            { cat: 'C', text: "Saya cocok bekerja sebagai akuntan, sekretaris, atau administrator data." }
+        ];
+
+        const totalQuestions = questions.length; // 108
+        const questionsPerPage = 10;
+        let currentPage = 1;
+        const totalPages = Math.ceil(totalQuestions / questionsPerPage);
+
+        // Store user answers: { [index]: 1 (Ya) | 0 (Tidak) }
+        let userAnswers = {};
+        let riasecChartObj = null;
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            const u = document.getElementById('loginUsername').value.trim();
+            const p = document.getElementById('loginPassword').value.trim();
+            const btn = document.getElementById('btnLoginSubmit');
+            const errEl = document.getElementById('loginError');
+
+            errEl.classList.add('hidden');
+            btn.disabled = true;
+            btn.innerText = "Memverifikasi...";
+
+            try {
+                // Autentikasi langsung ke Google Apps Script tanpa hardcoded password
+                const response = await fetch(APPS_SCRIPT_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({
+                        action: 'login',
+                        username: u,
+                        password: p
+                    })
+                });
+
+                const res = await response.json();
+
+                if (res.status === 'success') {
+                    currentActiveUser = res.user || { username: u, nama: u };
+                    document.getElementById('loginScreen').classList.add('hidden');
+                    document.getElementById('testScreen').classList.remove('hidden');
+                    document.getElementById('userInfo').classList.remove('hidden');
+                    document.getElementById('displayUsername').innerText = currentActiveUser.nama || currentActiveUser.username;
+                    renderPage();
+                } else {
+                    errEl.innerText = res.message || "Username atau Password salah!";
+                    errEl.classList.remove('hidden');
+                }
+            } catch (error) {
+                console.error("Login API Error:", error);
+                errEl.innerText = "Gagal terhubung ke Server Biro. Periksa koneksi internet Anda.";
+                errEl.classList.remove('hidden');
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "Masuk Sekarang";
+            }
+        }
+
+        function logout() {
+            currentActiveUser = null;
+            document.getElementById('userInfo').classList.add('hidden');
+            document.getElementById('testScreen').classList.add('hidden');
+            document.getElementById('resultScreen').classList.add('hidden');
+            document.getElementById('loginScreen').classList.remove('hidden');
+            document.getElementById('loginForm').reset();
+        }
+
+        function renderPage() {
+            const container = document.getElementById('questionsContainer');
+            container.innerHTML = '';
+
+            const startIndex = (currentPage - 1) * questionsPerPage;
+            const endIndex = Math.min(startIndex + questionsPerPage, totalQuestions);
+
+            for (let i = startIndex; i < endIndex; i++) {
+                const q = questions[i];
+                const qNum = i + 1;
+                const isCheckedYes = userAnswers[i] === 1 ? 'checked' : '';
+                const isCheckedNo = userAnswers[i] === 0 ? 'checked' : '';
+
+                const card = document.createElement('div');
+                card.className = "bg-white p-4 sm:p-5 rounded-xl border border-slate-200/80 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:border-indigo-200 transition-all";
+                card.innerHTML = `
+                    <div class="flex items-start gap-3 flex-1">
+                        <span class="bg-indigo-50 text-indigo-700 font-bold px-2.5 py-1 rounded-lg text-xs shrink-0 border border-indigo-100">${qNum}</span>
+                        <p class="text-slate-700 text-xs sm:text-sm font-medium leading-relaxed">${q.text}</p>
+                    </div>
+                    <div class="flex items-center gap-4 self-end sm:self-center border-t sm:border-t-0 pt-2 sm:pt-0 w-full sm:w-auto justify-end shrink-0">
+                        <label class="inline-flex items-center cursor-pointer gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-emerald-50 hover:border-emerald-200 transition">
+                            <input type="radio" name="q_${i}" value="1" ${isCheckedYes} onchange="saveAnswer(${i}, 1)" class="w-4 h-4 text-emerald-600 focus:ring-emerald-500">
+                            <span class="text-xs font-bold text-slate-700">Ya</span>
+                        </label>
+                        <label class="inline-flex items-center cursor-pointer gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-rose-50 hover:border-rose-200 transition">
+                            <input type="radio" name="q_${i}" value="0" ${isCheckedNo} onchange="saveAnswer(${i}, 0)" class="w-4 h-4 text-rose-600 focus:ring-rose-500">
+                            <span class="text-xs font-bold text-slate-700">Tidak</span>
+                        </label>
+                    </div>
+                `;
+                container.appendChild(card);
+            }
+
+            // Update Page Controls & Text
+            document.getElementById('pageIndicator').innerText = `Halaman ${currentPage} dari ${totalPages}`;
+            document.getElementById('prevBtn').disabled = currentPage === 1;
+
+            if (currentPage === totalPages) {
+                document.getElementById('nextBtn').classList.add('hidden');
+                document.getElementById('submitBtn').classList.remove('hidden');
+            } else {
+                document.getElementById('nextBtn').classList.remove('hidden');
+                document.getElementById('submitBtn').classList.add('hidden');
+            }
+
+            updateProgress();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function saveAnswer(index, val) {
+            userAnswers[index] = val;
+            updateProgress();
+        }
+
+        function updateProgress() {
+            const answeredCount = Object.keys(userAnswers).length;
+            const pct = Math.round((answeredCount / totalQuestions) * 100);
+            document.getElementById('progressBar').style.width = pct + '%';
+            document.getElementById('progressPercent').innerText = `${pct}% Terjawab (${answeredCount}/${totalQuestions})`;
+        }
+
+        function changePage(delta) {
+            currentPage += delta;
+            renderPage();
+        }
+
+        async function calculateResult() {
+            const answeredCount = Object.keys(userAnswers).length;
+            if (answeredCount < totalQuestions) {
+                const proceed = confirm(`Anda baru menjawab ${answeredCount} dari ${totalQuestions} pertanyaan. Apakah Anda yakin ingin melihat hasil sekarang?`);
+                if (!proceed) return;
+            }
+
+            const answersArray = [];
+            const scores = { R: 0, I: 0, A: 0, S: 0, E: 0, C: 0 };
+
+            questions.forEach((q, idx) => {
+                const val = userAnswers[idx] === 1 ? 1 : 0;
+                answersArray.push(val);
+                if (val === 1) scores[q.cat]++;
+            });
+
+            // Kirim Hasil Pengujian ke Backend Google Apps Script (Auto-save ke Sheet & Biro Email)
+            try {
+                fetch(APPS_SCRIPT_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({
+                        action: 'submit_test',
+                        username: currentActiveUser ? currentActiveUser.username : 'Guest',
+                        nama: currentActiveUser ? currentActiveUser.nama : 'Guest',
+                        answers: answersArray
+                    })
+                });
+            } catch (err) {
+                console.error("Gagal mengirimkan data ke Biro:", err);
+            }
+
+            document.getElementById('testScreen').classList.add('hidden');
+            document.getElementById('resultScreen').classList.remove('hidden');
+
+            renderChartAndAnalysis(scores);
+        }
+
+        function renderChartAndAnalysis(scores) {
+            const catNames = {
+                R: 'Realistic',
+                I: 'Investigative',
+                A: 'Artistic',
+                S: 'Social',
+                E: 'Enterprising',
+                C: 'Conventional'
+            };
+
+            const sortedCats = Object.keys(scores).sort((a, b) => scores[b] - scores[a]);
+            const top3Code = sortedCats.slice(0, 3).join('');
+
+            document.getElementById('topCode').innerText = top3Code;
+
+            // Breakdown list
+            const breakdownEl = document.getElementById('categoryBreakdown');
+            breakdownEl.innerHTML = '';
+            sortedCats.forEach(cat => {
+                const score = scores[cat];
+                const pct = Math.round((score / 18) * 100);
+                breakdownEl.innerHTML += `
+                    <div class="flex items-center justify-between text-xs py-1.5 border-b border-slate-200/60">
+                        <span class="font-semibold text-slate-700">${catNames[cat]} (${cat})</span>
+                        <div class="flex items-center gap-2">
+                            <span class="font-mono font-bold text-indigo-600">${score}/18</span>
+                            <span class="text-slate-400">(${pct}%)</span>
+                        </div>
+                    </div>
+                `;
+            });
+
+            // Career Recommendations Text Map
+            const details = {
+                R: "<b>Realistic (Praktis & Fisik)</b>: Menyukai pekerjaan praktis, penggunaan mesin, alat-alat perkakas, dan outdoor.<br><span class='text-slate-500'>Prospek Karir:</span> Tekniker, Mekanik, Pilot, Arsitek Landskap, Otomotif, Teknik Sipil.",
+                I: "<b>Investigative (Analitis & Penelitian)</b>: Menyukai investigasi, analisis data, eksperimen, dan riset ilmiah.<br><span class='text-slate-500'>Prospek Karir:</span> Peneliti, Data Scientist, Dokter, Software Engineer, Ahli Biologi, Akademisi.",
+                A: "<b>Artistic (Kreatif & Ekspresif)</b>: Menyukai kreasi seni, ekspresi bebas, desain visual, musik, dan tulisan.<br><span class='text-slate-500'>Prospek Karir:</span> Desainer Grafis, Writer, Musisi, Arsitek, Animator, Fotografer.",
+                S: "<b>Social (Pelayanan & Edukasi)</b>: Menyukai kegiatan membantu, mengajar, membimbing, dan merawat orang lain.<br><span class='text-slate-500'>Prospek Karir:</span> Guru/Pengajar, Psikolog, Konselor, Perawat, Konsultan HRD.",
+                E: "<b>Enterprising (Persuasif & Bisnis)</b>: Menyukai kepemimpinan, pemasaran, negosiasi, dan kewirausahaan.<br><span class='text-slate-500'>Prospek Karir:</span> Wirausahawan, Manajer, Marketing Executive, Pengacara, Politisi.",
+                C: "<b>Conventional (Administratif & Detail)</b>: Menyukai data terstruktur, pencatatan, ketelitian, dan sistem kantor.<br><span class='text-slate-500'>Prospek Karir:</span> Akuntan, Auditor, Administrator Bank, Data Entry, Notaris."
+            };
+
+            const recTextEl = document.getElementById('recommendationText');
+            recTextEl.innerHTML = sortedCats.slice(0, 3).map(c => `
+                <div class="p-4 bg-white rounded-xl border border-indigo-100 shadow-sm border-l-4 border-l-indigo-600">
+                    ${details[c]}
+                </div>
+            `).join('');
+
+            // Build Radar Chart
+            const ctx = document.getElementById('riasecChart').getContext('2d');
+            if (riasecChartObj) riasecChartObj.destroy();
+
+            riasecChartObj = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: ['Realistic', 'Investigative', 'Artistic', 'Social', 'Enterprising', 'Conventional'],
+                    datasets: [{
+                        label: 'Skor RIASEC',
+                        data: [scores.R, scores.I, scores.A, scores.S, scores.E, scores.C],
+                        backgroundColor: 'rgba(79, 70, 229, 0.25)',
+                        borderColor: 'rgba(79, 70, 229, 1)',
+                        borderWidth: 2,
+                        pointBackgroundColor: 'rgba(79, 70, 229, 1)',
+                        pointRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    scales: {
+                        r: {
+                            angleLines: { color: '#e2e8f0' },
+                            grid: { color: '#f1f5f9' },
+                            pointLabels: {
+                                font: { size: 10, weight: '600', family: 'Inter' },
+                                color: '#475569'
+                            },
+                            suggestedMin: 0,
+                            suggestedMax: 18,
+                            ticks: { stepSize: 3, display: false }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+        }
+
+        function restartTest() {
+            userAnswers = {};
+            currentPage = 1;
+            document.getElementById('resultScreen').classList.add('hidden');
+            document.getElementById('testScreen').classList.remove('hidden');
+            renderPage();
+        }
+    </script>
+</body>
+</html>
