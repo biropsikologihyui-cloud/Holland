@@ -6,7 +6,7 @@
     <title>Holland Aptitude Test (RIASEC) - Biro Psikologi HYUI</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Font Inter -->
+    <!-- Google Font Inter / Plus Jakarta Sans -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -229,7 +229,7 @@
             </div>
         </div>
 
-        <!-- Modal Konfirmasi Soal belum Lengkap (Tanpa Window Confirm/Alert) -->
+        <!-- Modal Konfirmasi Soal belum Lengkap -->
         <div id="unansweredModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
             <div class="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-4 border border-slate-100">
                 <div class="w-12 h-12 bg-amber-100 text-amber-600 rounded-2xl flex items-center justify-center font-bold text-xl">
@@ -259,8 +259,183 @@
         const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbykO6LzVuvkw50Ai9Bd7ZvtwikTNgQXaQUjAzUq5Y3gSVum6sjSLc0IdVIEtMnSJqiN/exec";
 
         let currentActiveUser = null;
+        let currentPage = 1;
+        const questionsPerPage = 10;
+        let userAnswers = {};
 
-        // ... existing questions array ...
+        // 108 Pertanyaan Holland RIASEC (18 Soal per Kategori: R, I, A, S, E, C)
+        const questions = [
+            // REALISTIC (Soal 1-18)
+            { id: 1, type: "R", text: "Saya suka merakit, memperbaiki, atau membongkar peralatan mesin/elektronik." },
+            { id: 2, type: "R", text: "Saya lebih menyukai pekerjaan fisik di luar ruangan daripada bekerja di balik meja." },
+            { id: 3, type: "R", text: "Saya terampil menggunakan perkakas tangan seperti palu, obeng, atau alat teknik." },
+            { id: 4, type: "R", text: "Saya menikmati kegiatan seperti berkebun, pertukangan, atau mengoperasikan mesin." },
+            { id: 5, type: "R", text: "Saya menyukai tugas-tugas praktis yang memberikan hasil nyata dan berwujud." },
+            { id: 6, type: "R", text: "Saya lebih mudah memahami cara kerja sesuatu dengan mempraktikkannya langsung." },
+            { id: 7, type: "R", text: "Saya tertarik pada bidang mekanika, otomotif, atau konstruksi bangunan." },
+            { id: 8, type: "R", text: "Saya suka merawat kelistrikan, perangkat keras komputer, atau instalasi air." },
+            { id: 9, type: "R", text: "Saya merasa nyaman bekerja dengan benda mati atau peralatan teknis." },
+            { id: 10, type: "R", text: "Saya lebih suka memecahkan masalah teknis dibanding mendiskusikan perasaan." },
+            { id: 11, type: "R", text: "Saya tertarik mengendarai kendaraan berat, drone, atau alat navigasi." },
+            { id: 12, type: "R", text: "Saya menikmati kegiatan outdoor seperti hiking, berkemah, atau eksplorasi alam." },
+            { id: 13, type: "R", text: "Saya dapat membaca denah skematik, cetak biru, atau panduan teknis dengan mudah." },
+            { id: 14, type: "R", text: "Saya lebih suka menggunakan pakaian yang fungsional dan praktis untuk bekerja." },
+            { id: 15, type: "R", text: "Saya tertarik dengan cara kerja instrumen pengukuran ilmiah atau teknik." },
+            { id: 16, type: "R", text: "Saya menyukai pekerjaan yang membutuhkan ketangkasan fisik dan koordinasi mata-tangan." },
+            { id: 17, type: "R", text: "Saya lebih memilih membuat barang dari kayu/logam sendiri daripada membelinya." },
+            { id: 18, type: "R", text: "Saya merasa puas ketika berhasil memperbaiki barang yang rusak." },
+
+            // INVESTIGATIVE (Soal 19-36)
+            { id: 19, type: "I", text: "Saya suka melakukan riset, penelitian, atau eksperimen ilmiah." },
+            { id: 20, type: "I", text: "Saya senang menganalisis data, angka, atau fenomena yang rumit." },
+            { id: 21, type: "I", text: "Saya tertarik mempelajari ilmu pengetahuan alam (Fisika, Kimia, Biologi, dll)." },
+            { id: 22, type: "I", text: "Saya sering mempertanyakan alasan di balik suatu peristiwa atau teori." },
+            { id: 23, type: "I", text: "Saya menyukai teka-teki logika, catur, atau pemecahan masalah algoritma." },
+            { id: 24, type: "I", text: "Saya betah membaca artikel ilmiah, jurnal, atau buku pengetahuan mendalam." },
+            { id: 25, type: "I", text: "Saya senang mengevaluasi informasi secara obyektif dan kritis." },
+            { id: 26, type: "I", text: "Saya tertarik memahami sistem kerja perangkat lunak atau pemrograman data." },
+            { id: 27, type: "I", text: "Saya menyukai eksperimen laboratorium atau pengujian hipotesis." },
+            { id: 28, type: "I", text: "Saya senang bekerja mandiri untuk memecahkan persoalan yang rumit." },
+            { id: 29, type: "I", text: "Saya tertarik pada bidang medis, farmasi, atau kesehatan ilmiah." },
+            { id: 30, type: "I", text: "Saya suka mengumpulkan fakta sebelum membuat suatu kesimpulan." },
+            { id: 31, type: "I", text: "Saya menyukai materi pelajaran Matematika atau Statistika." },
+            { id: 32, type: "I", text: "Saya penasaran dengan konsep-konsep abstrak dan teori filsafat ilmiah." },
+            { id: 33, type: "I", text: "Saya senang mempelajari pola-pola dari data grafik atau tren statistik." },
+            { id: 34, type: "I", text: "Saya lebih suka mengamati dan berpikir daripada langsung bertindak tanpa rencana." },
+            { id: 35, type: "I", text: "Saya tertarik menemukan metode baru yang efisien berdasarkan riset." },
+            { id: 36, type: "I", text: "Saya merasa puas ketika berhasil menemukan solusi matematis/ilmiah atas suatu masalah." },
+
+            // ARTISTIC (Soal 37-54)
+            { id: 37, type: "A", text: "Saya menyukai seni rupa, melukis, menggambar, atau desain grafis." },
+            { id: 38, type: "A", text: "Saya senang mengekspresikan diri melalui musik, bernyanyi, atau bermain alat musik." },
+            { id: 39, type: "A", text: "Saya suka menulis cerita, puisi, esai kreatif, atau konten naratif." },
+            { id: 40, type: "A", text: "Saya menikmati ide-ide unik dan tidak terlalu suka aturan yang terlalu kaku." },
+            { id: 41, type: "A", text: "Saya tertarik pada dunia akting, drama, tari, atau seni pertunjukan." },
+            { id: 42, type: "A", text: "Saya memiliki kepedulian tinggi terhadap estetika, warna, dan keindahan." },
+            { id: 43, type: "A", text: "Saya lebih suka jadwal kerja yang fleksibel dan kreatif daripada rutinitas ketat." },
+            { id: 44, type: "A", text: "Saya senang menciptakan sesuatu yang asli dan autentik dari imajinasi saya." },
+            { id: 45, type: "A", text: "Saya menyukai dunia fotografi, videografi, atau penyuntingan visual." },
+            { id: 46, type: "A", text: "Saya tertarik pada tata busana, desain interior, atau dekorasi estetis." },
+            { id: 47, type: "A", text: "Saya merasa terinspirasi saat mengunjungi museum seni, pameran, atau konser." },
+            { id: 48, type: "A", text: "Saya sering berpikir 'out of the box' untuk menyelesaikan suatu tantangan." },
+            { id: 49, type: "A", text: "Saya dapat merasakan dan mengekspresikan emosi melalui karya seni." },
+            { id: 50, type: "A", text: "Saya tidak suka pekerjaan yang terlalu repetitif dan monoton." },
+            { id: 51, type: "A", text: "Saya suka merancang konsep visual untuk promosi, logo, atau media sosial." },
+            { id: 52, type: "A", text: "Saya menghargai kebebasan berpendapat dan ekspresi gaya pribadi." },
+            { id: 53, type: "A", text: "Saya tertarik mempelajari sejarah seni atau gaya kebudayaan." },
+            { id: 54, type: "A", text: "Saya merasa puas ketika ide imajinatif saya diwujudkan dalam karya nyata." },
+
+            // SOCIAL (Soal 55-72)
+            { id: 55, type: "S", text: "Saya suka membantu, mengajar, atau membimbing orang lain." },
+            { id: 56, type: "S", text: "Saya pendengar yang baik ketika teman menceritakan masalah pribadi mereka." },
+            { id: 57, type: "S", text: "Saya tertarik pada pekerjaan pelayanan sosial, konseling, atau keperawatan." },
+            { id: 58, type: "S", text: "Saya senang bekerja dalam tim dan berinteraksi secara intensif dengan orang banyak." },
+            { id: 59, type: "S", text: "Saya memiliki empati tinggi terhadap penderitaan atau kesusahan sesama." },
+            { id: 60, type: "S", text: "Saya mudah bergaul dan menjalin hubungan baru dengan berbagai kalangan." },
+            { id: 61, type: "S", text: "Saya senang menjelaskan materi pembelajaran hingga orang lain paham." },
+            { id: 62, type: "S", text: "Saya tertarik pada ilmu Psikologi, Sosiologi, atau Pengembangan Manusia." },
+            { id: 63, type: "S", text: "Saya suka menjadi relawan dalam kegiatan kemanusiaan atau bakti sosial." },
+            { id: 64, type: "S", text: "Saya lebih memilih menyelesaikan konflik dengan diskusi emosional yang damai." },
+            { id: 65, type: "S", text: "Saya peduli dengan kesejahteraan mental dan emosional orang-orang di sekitar saya." },
+            { id: 66, type: "S", text: "Saya senang menyambut orang baru dalam suatu komunitas atau organisasi." },
+            { id: 67, type: "S", text: "Saya merasa bahagia saat bisa memberikan dampak positif bagi kehidupan orang lain." },
+            { id: 68, type: "S", text: "Saya tertarik melatih skill, bakat, atau memberikan coaching kepada orang lain." },
+            { id: 69, type: "S", text: "Saya pandai meredakan ketegangan dan menjadi penengah dalam kelompok." },
+            { id: 70, type: "S", text: "Saya menyukai pekerjaan yang berfokus pada kolaborasi ketimbang kompetisi ketat." },
+            { id: 71, type: "S", text: "Saya sering menjadi tempat bertanya dan berkonsultasi bagi teman-teman." },
+            { id: 72, type: "S", text: "Saya merasa puas jika berhasil membantu seseorang berkembang menjadi lebih baik." },
+
+            // ENTERPRISING (Soal 73-90)
+            { id: 73, type: "E", text: "Saya suka memimpin kelompok, mengarahkan tim, atau mengambil keputusan." },
+            { id: 74, type: "E", text: "Saya pandai berbicara di depan umum dan meyakinkan orang lain." },
+            { id: 75, type: "E", text: "Saya tertarik pada dunia bisnis, kewirausahaan, atau strategi pemasaran." },
+            { id: 76, type: "E", text: "Saya berani mengambil risiko demi mencapai target atau keuntungan tinggi." },
+            { id: 77, type: "E", text: "Saya suka melakukan negosiasi, penjualan, atau persuasi produk/ide." },
+            { id: 78, type: "E", text: "Saya kompetitif dan bersemangat mencapai pencapaian/prestasi tertinggi." },
+            { id: 79, type: "E", text: "Saya tertarik pada kepemimpinan politik, hukum, atau manajemen eksekutif." },
+            { id: 80, type: "E", text: "Saya senang mengorganisasi proyek besar dan membagikan tugas ke anggota tim." },
+            { id: 81, type: "E", text: "Saya pandai memanfaatkan peluang untuk menghasilkan pendapatan/bisnis." },
+            { id: 82, type: "E", text: "Saya memiliki rasa percaya diri yang tinggi saat menyampaikan gagasan." },
+            { id: 83, type: "E", text: "Saya menyukai tantangan target kerja dan persaingan pasar." },
+            { id: 84, type: "E", text: "Saya senang memotivasi orang lain untuk mencapai tujuan bersama." },
+            { id: 85, type: "E", text: "Saya tertarik dengan strategi diplomasi, public relations, atau media branding." },
+            { id: 86, type: "E", text: "Saya tidak ragu mengemukakan argumen dalam rapat atau debat." },
+            { id: 87, type: "E", text: "Saya berambisi memiliki usaha sendiri atau posisi posisi kunci kepemimpinan." },
+            { id: 88, type: "E", text: "Saya bisa bertindak cepat dan tegas dalam situasi darurat." },
+            { id: 89, type: "E", text: "Saya tertarik mempelajari gaya kepemimpinan tokoh-tokoh sukses." },
+            { id: 90, type: "E", text: "Saya merasa puas ketika berhasil memenangkan suatu proyek atau kesepakatan bisnis." },
+
+            // CONVENTIONAL (Soal 91-108)
+            { id: 91, type: "C", text: "Saya suka pekerjaan yang rapi, terstruktur, dan mengikuti Prosedur (SOP)." },
+            { id: 92, type: "C", text: "Saya teliti dalam mengelola dokumen, arsip, file, atau administrasi data." },
+            { id: 93, type: "C", text: "Saya tertarik pada akuntansi, pencatatan keuangan, atau pembuatan anggaran." },
+            { id: 94, type: "C", text: "Saya menyukai rutinitas kerja yang jelas dan memiliki kepastian panduan." },
+            { id: 95, type: "C", text: "Saya terampil mengoperasikan Microsoft Excel, spreadsheet, atau pemrosesan data." },
+            { id: 96, type: "C", text: "Saya cermat menemukan kesalahan ketik, angka salah, atau ketidakcocokan data." },
+            { id: 97, type: "C", text: "Saya lebih menyukai petunjuk kerja yang tertulis jelas dibanding arahan samar." },
+            { id: 98, type: "C", text: "Saya selalu menjaga kebersihan, kerapian meja kerja, dan pengorganisasian jadwal." },
+            { id: 99, type: "C", text: "Saya tertarik pada bidang perpajakan, audit, perbankan, atau notaris." },
+            { id: 100, type: "C", text: "Saya tepat waktu dan patuh pada tenggat waktu (deadline) yang ditentukan." },
+            { id: 101, type: "C", text: "Saya senang mengategorikan barang atau mengurutkan data sesuai abjad/sistem." },
+            { id: 102, type: "C", text: "Saya merasa nyaman bekerja dengan standar aturan hukum atau regulasi tertulis." },
+            { id: 103, type: "C", text: "Saya konsisten dan dapat diandalkan dalam mengerjakan tugas-tugas terperinci." },
+            { id: 104, type: "C", text: "Saya tidak menyukai instruksi acak yang berubah-ubah tanpa pemberitahuan." },
+            { id: 105, type: "C", text: "Saya senang memeriksa kembali hasil pekerjaan untuk memastikan tidak ada eror." },
+            { id: 106, type: "C", text: "Saya menyukai tugas verifikasi data, input data, atau pencatatan persediaan." },
+            { id: 107, type: "C", text: "Saya menghormati struktur hierarki organisasi dan jalur komando resmi." },
+            { id: 108, type: "C", text: "Saya merasa puas ketika seluruh administrasi dan pembukuan tersusun rapi sempurna." }
+        ];
+
+        const totalQuestions = questions.length;
+        const totalPages = Math.ceil(totalQuestions / questionsPerPage);
+
+        function handleLogin(event) {
+            if (event) {
+                event.preventDefault(); // Mencegah reload halaman HTML
+            }
+
+            const username = document.getElementById('userUsername').value.trim();
+            const password = document.getElementById('userPassword').value.trim();
+            const nama = document.getElementById('userNama').value.trim();
+            const usia = document.getElementById('userUsia').value.trim();
+            const gender = document.getElementById('userGender').value;
+            const instansi = document.getElementById('userInstansi').value.trim();
+            const noHp = document.getElementById('userNoHp').value.trim();
+            const email = document.getElementById('userEmail').value.trim();
+
+            const loginError = document.getElementById('loginError');
+
+            if (!username || !password || !nama || !usia || !gender || !instansi || !noHp || !email) {
+                loginError.classList.remove('hidden');
+                return;
+            }
+
+            loginError.classList.add('hidden');
+
+            currentActiveUser = {
+                username,
+                password,
+                nama,
+                usia,
+                gender,
+                instansi,
+                noHp,
+                email
+            };
+
+            // Tampilkan Header User
+            document.getElementById('displayUsername').innerText = `${nama} (${username})`;
+            document.getElementById('userInfo').classList.remove('hidden');
+
+            // Pindah Tampilan
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('testScreen').classList.remove('hidden');
+
+            // Reset ke Halaman 1
+            currentPage = 1;
+            renderPage();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
 
         function renderPage() {
             const container = document.getElementById('questionsContainer');
@@ -322,7 +497,6 @@
             
             userAnswers[index] = val;
 
-            // Direct update visual tanpa re-render DOM atau scroll reset
             const yesBtn = document.getElementById(`btn_yes_${index}`);
             const noBtn = document.getElementById(`btn_no_${index}`);
 
@@ -349,6 +523,90 @@
         function changePage(delta) {
             currentPage += delta;
             renderPage();
-            // Scroll ke atas HANYA dipicu saat pengguna berpindah halaman (Next / Prev)
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
+
+        function calculateResult() {
+            const answeredCount = Object.keys(userAnswers).length;
+
+            if (answeredCount < totalQuestions) {
+                const remaining = totalQuestions - answeredCount;
+                document.getElementById('unansweredModalText').innerText = `Masih ada ${remaining} soal yang belum Anda jawab. Anda dapat melengkapinya terlebih dahulu atau langsung mengirim jawaban.`;
+                document.getElementById('unansweredModal').classList.remove('hidden');
+            } else {
+                submitTestData();
+            }
+        }
+
+        function closeUnansweredModal() {
+            document.getElementById('unansweredModal').classList.add('hidden');
+        }
+
+        function confirmSubmitTest() {
+            closeUnansweredModal();
+            submitTestData();
+        }
+
+        function submitTestData() {
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = `
+                <svg class="animate-spin w-4 h-4 text-white" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span>Mengirim Jawaban...</span>
+            `;
+
+            // Konversi userAnswers ke Array 108 Element
+            const formattedAnswers = [];
+            for (let i = 0; i < totalQuestions; i++) {
+                formattedAnswers.push(userAnswers[i] !== undefined ? userAnswers[i] : 0);
+            }
+
+            const payload = {
+                identity: currentActiveUser,
+                answers: formattedAnswers
+            };
+
+            fetch(APPS_SCRIPT_URL, {
+                method: "POST",
+                mode: "no-cors",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            }).then(() => {
+                showResultScreen();
+            }).catch((err) => {
+                console.error("Error submit:", err);
+                // Tetap panggil tampilan terima kasih agar UX peserta tidak menggantung
+                showResultScreen();
+            });
+        }
+
+        function showResultScreen() {
+            document.getElementById('testScreen').classList.add('hidden');
+            document.getElementById('resultScreen').classList.remove('hidden');
+
+            document.getElementById('displaySubmittedName').innerText = currentActiveUser.nama;
+            document.getElementById('summaryNama').innerText = currentActiveUser.nama;
+            document.getElementById('summaryUsia').innerText = currentActiveUser.usia;
+            document.getElementById('summaryGender').innerText = currentActiveUser.gender;
+            document.getElementById('summaryInstansi').innerText = currentActiveUser.instansi;
+        }
+
+        function logout() {
+            currentActiveUser = null;
+            userAnswers = {};
+            currentPage = 1;
+
+            document.getElementById('loginForm').reset();
+            document.getElementById('userInfo').classList.add('hidden');
+            document.getElementById('resultScreen').classList.add('hidden');
+            document.getElementById('testScreen').classList.add('hidden');
+            document.getElementById('loginScreen').classList.remove('hidden');
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>
